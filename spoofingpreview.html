@@ -1,0 +1,79 @@
+
+<html>
+
+
+<a ontouchstart="y()"  href="data:text/html,https://new.logins.accounts.google.com" > Google</a>
+
+
+
+</html>
+
+<script>
+var onlongtouch; 
+var timer;
+var touchduration = 1; //length of time we want the user to touch before we do something
+//y();
+function touchstart(e) {
+    y();
+    e.preventDefault();
+    if (!timer) {
+        timer = setTimeout(onlongtouch, touchduration);
+    }
+}
+
+function touchend() {
+    //stops short touches from firing the event
+    if (timer) {
+        clearTimeout(timer);
+        timer = null;
+    }
+}
+
+onlongtouch = function() { 
+    timer = null;
+    //document.getElementById('ping').innerText+='ping\n'; 
+   // document.body.requestFullscreen();
+   //openFullscreen();
+  // y();
+};
+
+function getLocation() {
+//fullscreen();
+
+  //document.getElementById("sf").removeAttribute("disabled");
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition);
+   // document.getElementById("sf").focus()	
+  } else {
+    //x.innerHTML = "Geolocation is not supported by this browser.";
+  }
+  
+}
+
+function y()
+{
+   setTimeout(getUsb,200);
+   
+}
+function getUsb(){
+
+ navigator.usb.requestDevice({filters: [{}]}).then(
+        displayOutcome("usb", "success"),
+        displayOutcome("usb", "error")
+      );
+}
+  
+function showPosition(position) {
+ // x.innerHTML = "Latitude: " + position.coords.latitude +
+ // "<br>Longitude: " + position.coords.longitude;
+}
+
+/*document.addEventListener("DOMContentLoaded", function(event) { 
+    window.addEventListener("touchstart", touchstart, false);
+    window.addEventListener("touchend", touchend, false);
+});
+*/
+
+
+
+</script>
