@@ -86,12 +86,12 @@
             // Block tepat setelah requestFullscreen() dipanggil
             // Tujuan: cegah IPC dari renderer ke Android UI thread untuk render hint
             const blockStart = performance.now();
-            while (performance.now() - blockStart < 650) {
+            while (performance.now() - blockStart < 250) {
                 // Pure busy loop — tidak ada history, tidak ada postMessage
                 // hanya makan CPU main thread
                 Math.sqrt(Math.random()); // minimal work agar loop tidak di-optimize away
             }
-            addLog(`[BLOCK] Main thread blocked 650ms`);
+            addLog(`[BLOCK] Main thread blocked 250ms`);
         };
     </script>
 </body>
